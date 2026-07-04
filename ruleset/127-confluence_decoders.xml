@@ -1,0 +1,9 @@
+<!--
+  Confluence audit records decoder
+  Consumes the flat conf_* JSON records emitted by
+  /var/ossec/integrations/confluence_events.py
+-->
+<decoder name="confluence-json">
+  <prematch>"conf_integration":"confluence"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

@@ -1,0 +1,140 @@
+<!--
+  Confluence audit records rules
+  Source: /var/ossec/integrations/confluence_events.py -> confluence-json decoder
+  Rule ID range: 127000-127099
+
+  Coverage model:
+    * BASE 127000 matches every Confluence audit record at level 3.
+    * LAYER 1 rules match high-signal summaries/categories directly.
+    * LAYER 2 category tiers give useful severity to the remaining long tail.
+    * LAYER 3 correlation catches repeated export activity.
+
+  No rule uses level 0, so ingested events are not silently dropped.
+-->
+<group name="confluence,">
+
+  <!-- ========================================================= -->
+  <!-- BASE - matches every Confluence audit record              -->
+  <!-- ========================================================= -->
+  <rule id="127000" level="3">
+    <field name="conf_integration">^confluence$</field>
+    <description>Confluence audit event: $(conf_summary)</description>
+    <group>confluence,audit,</group>
+  </rule>
+
+  <!-- ========================================================= -->
+  <!-- LAYER 1 - high-signal audit detections                    -->
+  <!-- ========================================================= -->
+
+  <!-- Authentication and admin access -->
+  <rule id="127010" level="8">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(login|log in|sign[_ -]?in|authentication).*fail|fail.*(login|log in|sign[_ -]?in|authentication)</field>
+    <description>Confluence failed authentication: $(conf_summary) by $(conf_author_account_id)</description>
+    <group>confluence,authentication,authentication_failed,</group>
+  </rule>
+
+  <rule id="127020" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(password|authentication|sso|saml|oauth|two[_ -]?step|2fa|mfa).*(chang|updat|disab|enab|config|reset|remov)</field>
+    <description>Confluence authentication or password policy changed: $(conf_summary)</description>
+    <group>confluence,authentication,policy,</group>
+  </rule>
+
+  <rule id="127030" level="12">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(confluence administrator|site admin|system administrator|super admin|admin permission|global permission).*(grant|add|assign|giv|created)</field>
+    <description>Confluence administrative privilege granted: $(conf_summary)</description>
+    <group>confluence,privilege_escalation,</group>
+  </rule>
+
+  <rule id="127031" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(global permission|space permission|permission).*(chang|updat|grant|add|assign|remov|revok|delet)</field>
+    <description>Confluence permission changed: $(conf_summary)</description>
+    <group>confluence,policy,access_control,</group>
+  </rule>
+
+  <!-- Apps, integrations, and tokens -->
+  <rule id="127040" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(app|add-on|addon|plugin|webhook|oauth|api token|personal access token).*(install|uninstall|enab|disab|creat|delet|updat|chang|add|remov|revok)</field>
+    <description>Confluence app/integration trust changed: $(conf_summary)</description>
+    <group>confluence,third_party,policy,</group>
+  </rule>
+
+  <!-- Users and groups -->
+  <rule id="127050" level="6">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)user.*(creat|delet|deactivat|activat|renam|password|invited|created)|account.*(creat|delet|deactivat|activat)</field>
+    <description>Confluence user lifecycle change: $(conf_summary)</description>
+    <group>confluence,account_manipulation,</group>
+  </rule>
+
+  <rule id="127051" level="6">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(group|group membership).*(creat|delet|add|remov|renam|chang)|user.*(added to group|removed from group)</field>
+    <description>Confluence group or group membership changed: $(conf_summary)</description>
+    <group>confluence,account_manipulation,</group>
+  </rule>
+
+  <!-- Spaces, content, restrictions, and public exposure -->
+  <rule id="127060" level="8">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(space|page|blog|attachment|content).*(permission|restriction|anonymous|public|external|guest).*(chang|updat|add|remov|grant|revok)|anonymous.*(access|permission)|public link</field>
+    <description>Confluence content/space exposure or restriction changed: $(conf_summary)</description>
+    <group>confluence,policy,access_control,</group>
+  </rule>
+
+  <rule id="127061" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(space|page|blog|attachment|template).*(delet|archiv|trash|purge)|deleted.*(space|page|blog|attachment|template)</field>
+    <description>Confluence destructive content or space change: $(conf_summary)</description>
+    <group>confluence,configuration,impact,</group>
+  </rule>
+
+  <!-- Export, backup, and audit tampering -->
+  <rule id="127070" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(export|backup|restore|import|download).*(start|creat|run|complete|finish|download)|space export|site export</field>
+    <description>Confluence export/backup/restore activity: $(conf_summary) by $(conf_author_account_id)</description>
+    <group>confluence,exfiltration,backup,</group>
+  </rule>
+
+  <rule id="127080" level="8">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)(audit|auditing|audit log).*(chang|config|retention|export|delete|purge)</field>
+    <description>Confluence audit logging configuration or access event: $(conf_summary)</description>
+    <group>confluence,audit,policy,</group>
+  </rule>
+
+  <!-- ========================================================= -->
+  <!-- LAYER 2 - category tiers                                  -->
+  <!-- ========================================================= -->
+
+  <rule id="127090" level="10">
+    <if_sid>127000</if_sid>
+    <field name="conf_category" type="pcre2">(?i)(permission|security|authentication|user management|group management|administration|admin|audit)</field>
+    <description>Confluence security/identity category event [$(conf_category)]: $(conf_summary)</description>
+    <group>confluence,policy,access_control,</group>
+  </rule>
+
+  <rule id="127091" level="6">
+    <if_sid>127000</if_sid>
+    <field name="conf_category" type="pcre2">(?i)(space|content|page|blog|attachment|template|settings|configuration)</field>
+    <description>Confluence administrative category event [$(conf_category)]: $(conf_summary)</description>
+    <group>confluence,configuration,</group>
+  </rule>
+
+  <!-- ========================================================= -->
+  <!-- LAYER 3 - correlation                                     -->
+  <!-- ========================================================= -->
+
+  <rule id="127081" level="12" frequency="5" timeframe="300" ignore="600">
+    <if_matched_sid>127070</if_matched_sid>
+    <same_field>conf_author_account_id</same_field>
+    <description>Confluence DLP: repeated export/backup activity by $(conf_author_account_id)</description>
+    <group>confluence,exfiltration,</group>
+  </rule>
+
+</group>
