@@ -1,0 +1,30 @@
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Unsuccessful login attempt","conf_author_account_id":"5f8a1b2c","conf_src_ip":"203.0.113.10","conf_category":"auth"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"User logged in","conf_author_account_id":"5f8a1b2c","conf_src_ip":"203.0.113.10","conf_category":"auth"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Admin key activated","conf_author_account_id":"5f8a1b2c","conf_category":"admin"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Two-step verification disabled","conf_author_account_id":"5f8a1b2c","conf_category":"security"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Password policy updated","conf_author_account_id":"5f8a1b2c","conf_category":"security"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Granted Confluence administrator access","conf_author_account_id":"5f8a1b2c","conf_category":"permissions"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"User added to group","conf_associated_objects":"confluence-administrators","conf_author_account_id":"5f8a1b2c","conf_category":"groups"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Anonymous access enabled","conf_author_account_id":"5f8a1b2c","conf_category":"permissions"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Anonymous access disabled","conf_author_account_id":"5f8a1b2c","conf_category":"permissions"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Public link created","conf_affected_name":"Quarterly Roadmap","conf_author_account_id":"5f8a1b2c","conf_category":"pages"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Removed global permission","conf_author_account_id":"5f8a1b2c","conf_category":"permissions"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Space permission changed","conf_affected_name":"DOCS","conf_author_account_id":"5f8a1b2c","conf_category":"permissions"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"App installed","conf_affected_name":"Example Marketplace App","conf_author_account_id":"5f8a1b2c","conf_category":"apps"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"App uninstalled","conf_affected_name":"Example Marketplace App","conf_author_account_id":"5f8a1b2c","conf_category":"apps"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Authorized OAuth consumer","conf_author_account_id":"5f8a1b2c","conf_category":"apps"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"API token created","conf_author_account_id":"5f8a1b2c","conf_category":"security"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"API token revoked","conf_author_account_id":"5f8a1b2c","conf_category":"security"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Page deleted from space DOCS","conf_author_account_id":"5f8a1b2c","conf_category":"pages"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Space deleted","conf_affected_name":"DOCS","conf_author_account_id":"5f8a1b2c","conf_category":"spaces"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"User removed from group developers","conf_author_account_id":"5f8a1b2c","conf_category":"groups"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"User created","conf_author_account_id":"5f8a1b2c","conf_category":"users"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Audit log retention changed","conf_author_account_id":"5f8a1b2c","conf_category":"audit"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Audit log exported","conf_author_account_id":"5f8a1b2c","conf_category":"audit"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Audit log searched","conf_author_account_id":"5f8a1b2c","conf_category":"audit"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Site export created","conf_author_account_id":"5f8a1b2c","conf_category":"spaces"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Space exported","conf_affected_name":"DOCS","conf_author_account_id":"5f8a1b2c","conf_category":"spaces"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Space imported","conf_affected_name":"DOCS","conf_author_account_id":"5f8a1b2c","conf_category":"spaces"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Page exported to PDF","conf_author_account_id":"5f8a1b2c","conf_category":"pages"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Important announcement page created","conf_author_account_id":"5f8a1b2c","conf_category":"pages"}
+{"conf_integration":"confluence","conf_event_type":"audit","conf_summary":"Some unrecognized event","conf_category":"users"}
