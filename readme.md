@@ -178,23 +178,52 @@ All settings live in `/var/ossec/etc/confluence-events.env`.
 
 ## Ruleset Design
 
-Rule IDs are `127000-127099`.
+Rule IDs are `127000-127099`. Within each family the most specific rule
+appears first in the file, because sibling rules under `127000` are evaluated
+in file order and the first match wins. Correlation rules use
+`frequency="N"`, which fires on the (N+2)th matching event within the
+timeframe.
 
 | Rule | Level | Meaning |
 |---|---:|---|
 | `127000` | 3 | Base rule for every Confluence audit record. |
-| `127010` | 8 | Failed authentication. |
-| `127020` | 10 | Authentication, SSO, MFA, or password policy changed. |
-| `127030` | 12 | Administrative privilege granted. |
-| `127031` | 10 | Global or space permission changed. |
-| `127040` | 10 | App, plugin, webhook, OAuth, or token trust changed. |
-| `127050` / `127051` | 6 / 6 | User and group lifecycle changes. |
-| `127060` | 8 | Content/space exposure or restriction changed. |
-| `127061` | 10 | Space, page, blog, attachment, or template deleted/archived. |
-| `127070` | 10 | Export, backup, restore, import, or download activity. |
-| `127080` | 8 | Audit logging configuration or audit access event. |
-| `127090` / `127091` | 10 / 6 | Security/identity and administrative category tiers. |
-| `127081` | 12 | Repeated export/backup activity by the same actor in 5 minutes. |
+| `127010` | 5 | Single failed authentication. |
+| `127011` | 10 | 5 failed authentications by the same account in 4 minutes. |
+| `127012` | 10 | 7 failed authentications from the same source IP in 4 minutes. |
+| `127013` | 3 | Successful login/logout (kept low, out of the fallback tier). |
+| `127015` | 9 | Admin key, websudo/secure admin session, or impersonation. |
+| `127016` | 11 | MFA/2FA/SSO/SAML disabled or removed. |
+| `127017` | 10 | Other authentication/password configuration changes. |
+| `127019` | 7 | Administrative privilege removed. |
+| `127020` | 12 | Administrative privilege or global permission granted. |
+| `127021` | 12 | User added to a group whose name contains `admin` (structured). |
+| `127022` | 11 | Anonymous/public/guest/external exposure enabled. |
+| `127023` | 5 | Exposure removed or set to private. |
+| `127024` | 10 | Global permission changed. |
+| `127025` | 7 | Space/page permission or restriction changed. |
+| `127026` | 10 | 5 permission/exposure changes by the same actor in 10 minutes. |
+| `127030` | 10 | App/plugin/webhook installed, enabled, or OAuth app authorized. |
+| `127031` | 6 | App/plugin removed or disabled. |
+| `127032` | 10 | API/personal access token created. |
+| `127033` | 5 | API/personal access token revoked. |
+| `127040` | 5 | Page/blog/attachment/template/comment deleted. |
+| `127041` | 10 | Space deleted or archived. |
+| `127042` | 10 | 8 deletions by the same actor in 5 minutes (mass deletion). |
+| `127045` | 6 | Group or group membership changed. |
+| `127046` | 5 | User lifecycle change (create/invite/deactivate/delete). |
+| `127050` | 11 | Audit log configuration/retention changed or records purged. |
+| `127051` | 7 | Audit log exported. |
+| `127052` | 5 | Audit log viewed or searched. |
+| `127060` | 12 | Full site export or backup activity. |
+| `127061` | 9 | Space export. |
+| `127062` | 8 | Restore or import activity. |
+| `127063` | 6 | Single page/attachment export or download. |
+| `127064` | 12 | 5 export/backup/download events by the same actor in 10 minutes. |
+| `127090` | 6 | Fallback: security/identity audit categories. |
+| `127091` | 5 | Fallback: remaining administrative/content categories. |
+
+Severity levels are aligned with the Jira `126xxx` ruleset so the same event
+class scores the same level in both products.
 
 ## Operational Notes
 
