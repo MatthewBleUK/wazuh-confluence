@@ -21,22 +21,26 @@
       trade-off to avoid alert storms.
     * same_field only correlates events that actually carry that field.
 
-  Severity model (levels 3-12, no level 0 so nothing is silently dropped):
-    12  admin privilege granted / user added to an administrator group
-    11  MFA/SSO disabled, public or anonymous exposure ENABLED,
+  Severity model (levels 3-12, no level 0 so nothing is silently dropped;
+  aligned with the Jira 126xxx ruleset so the same event class scores the
+  same level in both products):
+    12  admin privilege granted / user added to an administrator group,
         full site export or backup, bulk export correlation
-    10  brute force correlations, app installed/authorized, space deleted,
-        mass deletion, audit log config/retention changed, repeated
-        permission changes
-     9  admin key/impersonation, global permission changed, space export,
-        restore/import
-     8  auth/password config changed, API token created, audit log exported
-     7  space/page permission or restriction changed
-     6  group membership changes, app removed, security-category fallback
-     5  single failed login, user lifecycle, single content deletion
-     4  exposure REMOVED, token revoked, single page export/download,
+    11  MFA/SSO disabled, public or anonymous exposure ENABLED,
+        audit log config/retention changed
+    10  brute force correlations, auth/password config changed,
+        app installed/authorized, API token created, global permission
+        changed, space deleted, mass deletion, repeated permission changes
+     9  admin key/impersonation, space export
+     8  restore/import
+     7  admin privilege removed, space/page permission or restriction
+        changed, audit log exported
+     6  group membership changes, app removed, single page
+        export/download, security-category fallback
+     5  single failed login, user lifecycle, single content deletion,
+        exposure REMOVED, token revoked, audit log viewed/searched,
         admin-category fallback
-     3  base rule, successful login, audit log viewed/searched
+     3  base rule, successful login
 -->
 <group name="confluence,">
 
@@ -121,7 +125,7 @@
   </rule>
 
   <!-- Other authentication / password / SSO configuration changes -->
-  <rule id="127017" level="8">
+  <rule id="127017" level="10">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b(password|passwd|two[ _-]?step|two[ _-]?factor|2fa|mfa|multi[ _-]?factor|sso|single sign[ _-]?on|saml|oauth|openid|authentication)\b.{0,60}\b(chang\w*|updat\w*|modif\w*|configur\w*|reset\w*|enabl\w*|enforc\w*|requir\w*|set|polic\w*)\b|\b(chang\w*|updat\w*|modif\w*|configur\w*|reset\w*|enabl\w*|enforc\w*)\b.{0,60}\b(password|two[ _-]?step|two[ _-]?factor|2fa|mfa|multi[ _-]?factor|sso|single sign[ _-]?on|saml|oauth|openid|authentication)\b</field>
     <description>Confluence: authentication or password configuration changed: $(conf_summary)</description>
@@ -134,6 +138,17 @@
   <!-- ========================================================= -->
   <!-- LAYER 1 - Privileges, permissions, public exposure        -->
   <!-- ========================================================= -->
+
+  <!-- Administrative privilege removed: notable but de-escalatory.
+       Requires the full word "administrator" (or admin + privilege noun)
+       so "deleted page admin guide" style summaries stay in the content
+       rules. Precedes 127024 so global permission removals score 7. -->
+  <rule id="127019" level="7">
+    <if_sid>127000</if_sid>
+    <field name="conf_summary" type="pcre2">(?i)\b(remov\w*|revok\w*|demot\w*)\b.{0,60}\b((system |site |global |super |confluence )?administrators?|admin(istrator)? (permission|privilege|right|role|access)\w*)\b|\b((system |site |global |super |confluence )?administrators?|admin(istrator)? (permission|privilege|right|role|access)\w*)\b.{0,60}\b(remov\w*|revok\w*|delet\w*|demot\w*)\b|\bglobal permissions?\b.{0,50}\b(remov\w*|revok\w*|delet\w*)\b|\b(remov\w*|revok\w*|delet\w*)\b.{0,50}\bglobal permissions?\b|\b(remov\w*|revok\w*)\b.{0,60}\bconfluence-administrators\b</field>
+    <description>Confluence: administrative privilege removed: $(conf_summary)</description>
+    <group>confluence,access_control,account_manipulation,</group>
+  </rule>
 
   <!-- Administrative privilege granted (both word orders) -->
   <rule id="127020" level="12">
@@ -170,15 +185,16 @@
   </rule>
 
   <!-- Exposure removed/disabled: informational, much lower severity -->
-  <rule id="127023" level="4">
+  <rule id="127023" level="5">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b(disabl\w*|remov\w*|revok\w*|deactivat\w*|turn\w*[ _-]?off|delet\w*|den(y|ied))\b.{0,60}\b(anonymous|public[ _-]?(link|access|shar\w*|view\w*)|guest access|external (access|shar\w*|collaborat\w*)|unlicensed)\b|\b(anonymous( access)?|public[ _-]?(link\w*|access|shar\w*)|guest access|external (access|shar\w*))\b.{0,60}\b(disabl\w*|remov\w*|revok\w*|deactivat\w*|turn\w*[ _-]?off|delet\w*)\b|\b(made|set|chang\w*|switch\w*)\b.{0,40}\b(to )?private\b</field>
     <description>Confluence: public/anonymous/external exposure removed: $(conf_summary)</description>
     <group>confluence,access_control,conf_perm_change,</group>
   </rule>
 
-  <!-- Global permission changed (grants already escalated by 127020) -->
-  <rule id="127024" level="9">
+  <!-- Global permission changed (grants already escalated by 127020,
+       removals by 127019) -->
+  <rule id="127024" level="10">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\bglobal permissions?\b.{0,60}\b(chang\w*|updat\w*|remov\w*|revok\w*|edit\w*|modif\w*|delet\w*|set)\b|\b(chang\w*|updat\w*|remov\w*|revok\w*|edit\w*|modif\w*|delet\w*)\b.{0,60}\bglobal permissions?\b</field>
     <description>Confluence: global permission changed by $(conf_author_account_id): $(conf_summary)</description>
@@ -229,7 +245,7 @@
   </rule>
 
   <!-- API token / personal access token created -->
-  <rule id="127032" level="8">
+  <rule id="127032" level="10">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b((api|access|oauth|bearer|personal access) tokens?|api keys?)\b.{0,50}\b(creat\w*|generat\w*|issu\w*|add\w*)\b|\b(creat\w*|generat\w*|issu\w*|add\w*)\b.{0,50}\b((api|access|oauth|bearer|personal access) tokens?|api keys?)\b</field>
     <description>Confluence: API/personal access token created by $(conf_author_account_id): $(conf_summary)</description>
@@ -240,7 +256,7 @@
   </rule>
 
   <!-- API token / personal access token revoked or expired -->
-  <rule id="127033" level="4">
+  <rule id="127033" level="5">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b((api|access|oauth|bearer|personal access) tokens?|api keys?)\b.{0,50}\b(revok\w*|delet\w*|remov\w*|expir\w*|invalidat\w*)\b|\b(revok\w*|delet\w*|remov\w*|invalidat\w*)\b.{0,50}\b((api|access|oauth|bearer|personal access) tokens?|api keys?)\b</field>
     <description>Confluence: API/personal access token revoked: $(conf_summary)</description>
@@ -318,7 +334,7 @@
   <!-- ========================================================= -->
 
   <!-- Audit retention/configuration changed or audit records purged -->
-  <rule id="127050" level="10">
+  <rule id="127050" level="11">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\baudit\w*\b.{0,60}\b(retention|configur\w*|polic\w*|settings?|disabl\w*|chang\w*|updat\w*|modif\w*|delet\w*|purg\w*|clear\w*)\b|\b(retention|configur\w*|chang\w*|updat\w*|modif\w*|disabl\w*|purg\w*|clear\w*)\b.{0,60}\baudit\w*\b</field>
     <description>Confluence: audit log configuration/retention changed or records purged: $(conf_summary)</description>
@@ -329,7 +345,7 @@
   </rule>
 
   <!-- Audit log exported/downloaded -->
-  <rule id="127051" level="8">
+  <rule id="127051" level="7">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\baudit\w*\b.{0,60}\b(export\w*|download\w*)\b|\b(export\w*|download\w*)\b.{0,60}\baudit\w*\b</field>
     <description>Confluence: audit log exported by $(conf_author_account_id): $(conf_summary)</description>
@@ -337,7 +353,7 @@
   </rule>
 
   <!-- Audit log viewed or searched: normal admin activity -->
-  <rule id="127052" level="3">
+  <rule id="127052" level="5">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\baudit\w*\b.{0,60}\b(view\w*|search\w*|access\w*|quer\w*|brows\w*)\b|\b(view\w*|search\w*|quer\w*)\b.{0,60}\baudit\w*\b</field>
     <description>Confluence: audit log viewed/searched: $(conf_summary)</description>
@@ -349,7 +365,7 @@
   <!-- ========================================================= -->
 
   <!-- Full site export or backup: highest exfiltration signal -->
-  <rule id="127060" level="11">
+  <rule id="127060" level="12">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b(site|full|complete|entire|instance|whole|xml)[ _-]?export\w*\b|\bexport\w*\b.{0,40}\b(site|instance|entire|whole|all spaces)\b|\bbackups?\b.{0,60}\b(creat\w*|start\w*|generat\w*|run\w*|complet\w*|finish\w*|schedul\w*|download\w*)\b|\b(creat\w*|start\w*|generat\w*|run\w*|schedul\w*|download\w*)\b.{0,60}\bbackups?\b</field>
     <description>Confluence: site export or backup activity by $(conf_author_account_id): $(conf_summary)</description>
@@ -371,7 +387,7 @@
   </rule>
 
   <!-- Restore or import: integrity-relevant, can plant content -->
-  <rule id="127062" level="9">
+  <rule id="127062" level="8">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b(restor\w*|import(?!ant)\w*)\b.{0,60}\b(site|space|backup|data|content|start\w*|complet\w*|run\w*|finish\w*)\b|\b(site|space|backup|data|content)s?\b.{0,40}\b(restor\w*|import(?!ant)\w*)\b</field>
     <description>Confluence: restore/import activity by $(conf_author_account_id): $(conf_summary)</description>
@@ -380,7 +396,7 @@
 
   <!-- Single page/attachment export or download: routine, escalated
        only by volume via 127064 -->
-  <rule id="127063" level="4">
+  <rule id="127063" level="6">
     <if_sid>127000</if_sid>
     <field name="conf_summary" type="pcre2">(?i)\b(pages?|blogs?|blog ?posts?|content|attachments?|files?)\b.{0,50}\b(export\w*|download\w*)\b|\b(export\w*|download\w*)\b.{0,50}\b(pages?|blogs?|blog ?posts?|content|attachments?|files?|pdf|word)\b|\bexport\w* (to|as) (pdf|word|html|xml)\b</field>
     <description>Confluence: content export/download: $(conf_summary)</description>
@@ -389,7 +405,7 @@
 
   <!-- Fires on the 5th export/backup/download by the same actor
        within 10 minutes: bulk collection behavior -->
-  <rule id="127064" level="11" frequency="3" timeframe="600" ignore="600">
+  <rule id="127064" level="12" frequency="3" timeframe="600" ignore="600">
     <if_matched_group>conf_export</if_matched_group>
     <same_field>conf_author_account_id</same_field>
     <description>Confluence: repeated export/backup/download activity by $(conf_author_account_id) (possible data collection)</description>
@@ -412,7 +428,7 @@
   </rule>
 
   <!-- Remaining administrative/content categories -->
-  <rule id="127091" level="4">
+  <rule id="127091" level="5">
     <if_sid>127000</if_sid>
     <field name="conf_category" type="pcre2">(?i)space|content|page|blog|attachment|template|setting|config</field>
     <description>Confluence administrative category event [$(conf_category)]: $(conf_summary)</description>

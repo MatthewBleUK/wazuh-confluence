@@ -193,39 +193,37 @@ timeframe.
 | `127013` | 3 | Successful login/logout (kept low, out of the fallback tier). |
 | `127015` | 9 | Admin key, websudo/secure admin session, or impersonation. |
 | `127016` | 11 | MFA/2FA/SSO/SAML disabled or removed. |
-| `127017` | 8 | Other authentication/password configuration changes. |
+| `127017` | 10 | Other authentication/password configuration changes. |
+| `127019` | 7 | Administrative privilege removed. |
 | `127020` | 12 | Administrative privilege or global permission granted. |
 | `127021` | 12 | User added to a group whose name contains `admin` (structured). |
 | `127022` | 11 | Anonymous/public/guest/external exposure enabled. |
-| `127023` | 4 | Exposure removed or set to private. |
-| `127024` | 9 | Global permission changed/removed. |
+| `127023` | 5 | Exposure removed or set to private. |
+| `127024` | 10 | Global permission changed. |
 | `127025` | 7 | Space/page permission or restriction changed. |
 | `127026` | 10 | 5 permission/exposure changes by the same actor in 10 minutes. |
 | `127030` | 10 | App/plugin/webhook installed, enabled, or OAuth app authorized. |
 | `127031` | 6 | App/plugin removed or disabled. |
-| `127032` | 8 | API/personal access token created. |
-| `127033` | 4 | API/personal access token revoked. |
+| `127032` | 10 | API/personal access token created. |
+| `127033` | 5 | API/personal access token revoked. |
 | `127040` | 5 | Page/blog/attachment/template/comment deleted. |
 | `127041` | 10 | Space deleted or archived. |
 | `127042` | 10 | 8 deletions by the same actor in 5 minutes (mass deletion). |
 | `127045` | 6 | Group or group membership changed. |
 | `127046` | 5 | User lifecycle change (create/invite/deactivate/delete). |
-| `127050` | 10 | Audit log configuration/retention changed or records purged. |
-| `127051` | 8 | Audit log exported. |
-| `127052` | 3 | Audit log viewed or searched. |
-| `127060` | 11 | Full site export or backup activity. |
+| `127050` | 11 | Audit log configuration/retention changed or records purged. |
+| `127051` | 7 | Audit log exported. |
+| `127052` | 5 | Audit log viewed or searched. |
+| `127060` | 12 | Full site export or backup activity. |
 | `127061` | 9 | Space export. |
-| `127062` | 9 | Restore or import activity. |
-| `127063` | 4 | Single page/attachment export or download. |
-| `127064` | 11 | 5 export/backup/download events by the same actor in 10 minutes. |
+| `127062` | 8 | Restore or import activity. |
+| `127063` | 6 | Single page/attachment export or download. |
+| `127064` | 12 | 5 export/backup/download events by the same actor in 10 minutes. |
 | `127090` | 6 | Fallback: security/identity audit categories. |
-| `127091` | 4 | Fallback: remaining administrative/content categories. |
+| `127091` | 5 | Fallback: remaining administrative/content categories. |
 
-Sample events for `wazuh-logtest` are in `tests/sample-events.jsonl`:
-
-```bash
-sudo /var/ossec/bin/wazuh-logtest < tests/sample-events.jsonl
-```
+Severity levels are aligned with the Jira `126xxx` ruleset so the same event
+class scores the same level in both products.
 
 ## Operational Notes
 
