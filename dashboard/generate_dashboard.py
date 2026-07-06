@@ -258,7 +258,7 @@ table("conf-objects", "[Confluence Audit] Objects Acted On (type · name)",
        bucket(f"{D}conf_affected_name", 3, "Top objects", "3")], 10)
 table("conf-sites", "[Confluence Audit] Sites (data.conf_site_host)",
       [bucket(f"{D}conf_site_host", 10, "Site host", "2"),
-       bucket(f"{D}conf_author_account_type", 1, "Top account type", "3")], 10)
+       bucket(f"{D}conf_category", 1, "Top category", "3")], 10)
 
 # ---- Security & detections -------------------------------------------------
 markdown("conf-md-sec", "[Confluence Audit] md Security",
@@ -393,51 +393,6 @@ table("conf-fallback-table", "[Confluence Audit] Unclassified Summaries (summary
        bucket(f"{D}conf_category", 1, "Category", "3")], 15,
       filt=[kql("rule.id:(127090 or 127091)", "fallback")])
 
-# ---- Coverage reference ----------------------------------------------------
-markdown("conf-coverage", "[Confluence Audit] Rule Reference (1/2)",
-         "### 🗺️ Rule & Coverage Reference\n"
-         "Layered ruleset — base rule 127000 guarantees **no event is missed**; the most "
-         "specific rule in each family wins (file order). Levels are aligned with the Jira "
-         "126xxx ruleset so the same event class scores the same in both products.\n\n"
-         "| Rule | Level | Meaning |\n|---|---|---|\n"
-         "| **127000** | 3 | Base — every Confluence audit record (no-miss catch-all) |\n"
-         "| **127010** | 5 | Single failed login |\n"
-         "| **127011 / 127012** | **10** | Brute force: same account / same source IP |\n"
-         "| **127013** | 3 | Successful login / logout |\n"
-         "| **127015** | 9 | Admin key / websudo / impersonation |\n"
-         "| **127016** | **11** | MFA/2FA/SSO/SAML disabled or removed |\n"
-         "| **127017** | 10 | Authentication/password config changed |\n"
-         "| **127019** | 7 | Admin privilege removed |\n"
-         "| **127020 / 127021** | **12** | Admin privilege granted / added to admin group |\n"
-         "| **127022 / 127023** | **11** / 5 | Public/anonymous exposure enabled / removed |\n"
-         "| **127024** | 10 | Global permission changed |\n"
-         "| **127025** | 7 | Space/page permission or restriction changed |\n"
-         "| **127026** | 10 | Repeated permission/exposure changes (corr) |")
-markdown("conf-coverage-2", "[Confluence Audit] Rule Reference (2/2)",
-         "### &nbsp;\n"
-         "Category tiers backstop the long tail; correlation rules escalate repeated "
-         "behavior by the same actor.\n\n"
-         "| Rule | Level | Meaning |\n|---|---|---|\n"
-         "| **127030 / 127031** | 10 / 6 | App installed or authorized / removed |\n"
-         "| **127032 / 127033** | 10 / 5 | API token created / revoked |\n"
-         "| **127040** | 5 | Page/blog/attachment/template deleted |\n"
-         "| **127041** | 10 | Space deleted or archived |\n"
-         "| **127042** | 10 | Mass content deletion (corr, ≥8 in 5 min) |\n"
-         "| **127045 / 127046** | 6 / 5 | Group membership / user lifecycle |\n"
-         "| **127050 / 127051 / 127052** | **11** / 7 / 5 | Audit log config changed / exported / viewed |\n"
-         "| **127060 / 127061** | **12** / 9 | Site export or backup / space export |\n"
-         "| **127062 / 127063** | 8 / 6 | Restore or import / content export/download |\n"
-         "| **127064** | **12** | Bulk export by one actor (corr, ≥5 in 10 min) |\n"
-         "| **127090 / 127091** | 6 / 5 | Category fallback tiers (security / admin) |")
-markdown("conf-coverage-notes", "[Confluence Audit] Coverage Notes",
-         "**Notes:**\n"
-         "- Correlation `frequency=\"N\"` fires on the (N+2)th event; `ignore` suppresses "
-         "per-rule, not per-actor (anti-storm trade-off).\n"
-         "- Correlations key on `conf_author_account_id`; the actor panels display "
-         "`conf_author_name` for readability.\n"
-         "- Source IP panels populate only when audit records carry an address (mostly "
-         "login events).")
-
 # ============================================================================
 # DASHBOARD LAYOUT  (48-col grid; rows expand to absolute y coordinates)
 # ============================================================================
@@ -484,9 +439,6 @@ rows = [
     # Fallback canary
     (3,  [("conf-md-fallback", 0, 48)]),
     (12, [("conf-fallback-timeline", 0, 24), ("conf-fallback-table", 24, 24)]),
-    # Coverage
-    (30, [("conf-coverage", 0, 24), ("conf-coverage-2", 24, 24)]),
-    (9,  [("conf-coverage-notes", 0, 48)]),
 ]
 
 layout, y = [], 0
