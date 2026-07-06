@@ -233,9 +233,9 @@ covers overview KPIs and severity trends, top actors/summaries, security
 detections with a MITRE ATT&CK table, authentication and brute-force
 correlations, permission/exposure changes, content deletion (including the
 mass-deletion correlation), export/backup collection, audit-log integrity,
-users/groups plus guest and external-collaborator activity, a
-category-fallback canary, and a rule coverage reference. Every panel is scoped
-by a dashboard-level `data.conf_integration:confluence` filter.
+users/groups plus guest and external-collaborator activity, and a
+category-fallback canary. Every panel is scoped by a dashboard-level
+`data.conf_integration:confluence` filter.
 
 Import via **Dashboards Management → Saved objects → Import** (requires the
 `wazuh-alerts-*` index pattern). To customize, edit
