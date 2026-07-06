@@ -223,56 +223,45 @@ EXTERNAL_KQL = (f"{D}conf_author_is_guest:true or "
 # ============================================================================
 # PANELS
 # ============================================================================
-markdown("conf-header", "CONF — Header",
-         "## 🟦 Confluence Audit Events\n"
-         "Confluence audit records from `/wiki/rest/api/audit`, collected by the "
-         "`confluence_events.py` integration (command wodle, polled every 5 minutes) → "
-         "`confluence-json` decoder → ruleset **127000-127099** (`wazuh-alerts-*`, scoped to "
-         "`data.conf_integration:confluence`). Every audit record is flattened to "
-         "collision-safe `conf_*` fields; rules classify the free-text `conf_summary` into "
-         "layered severity tiers with correlation rules for brute force, repeated permission "
-         "changes, mass deletion, and bulk export.")
-
 # ---- Overview / KPIs -------------------------------------------------------
-markdown("conf-md-overview", "CONF — md Overview", "### 📊 Overview")
-metric("conf-total", "CONF — Total Events", count_metric())
-metric("conf-actors", "CONF — Distinct Actors", cardinality(f"{D}conf_author_name", "Actors"), color_to=500)
-metric("conf-categories", "CONF — Distinct Categories", cardinality(f"{D}conf_category", "Categories"), color_to=50)
-metric("conf-high", "CONF — High Severity (L≥10)", count_metric(), color_to=50,
+metric("conf-total", "[Confluence Audit] Total Events", count_metric())
+metric("conf-actors", "[Confluence Audit] Distinct Actors", cardinality(f"{D}conf_author_name", "Actors"), color_to=500)
+metric("conf-categories", "[Confluence Audit] Distinct Categories", cardinality(f"{D}conf_category", "Categories"), color_to=50)
+metric("conf-high", "[Confluence Audit] High Severity (L≥10)", count_metric(), color_to=50,
        filt=[level_gte(10, "L>=10")])
-metric("conf-corr", "CONF — Correlation Alerts", count_metric(), color_to=25,
+metric("conf-corr", "[Confluence Audit] Correlation Alerts", count_metric(), color_to=25,
        filt=[kql(CORR_IDS, "correlations")])
-metric("conf-external", "CONF — Guest/External Actor Events", count_metric(), color_to=100,
+metric("conf-external", "[Confluence Audit] Guest/External Actor Events", count_metric(), color_to=100,
        filt=[kql(EXTERNAL_KQL, "guest/external")])
-timeline_filters("conf-timeline", "CONF — Events Over Time (by severity)", SEVERITY)
-pie_filters("conf-severity", "CONF — Severity Distribution", SEVERITY)
-hbar("conf-category", "CONF — Category Distribution", f"{D}conf_category", "Category", 20)
-hbar("conf-rules-bar", "CONF — Top Rules Fired", "rule.description", "Rule", 15)
+timeline_filters("conf-timeline", "[Confluence Audit] Events Over Time (by severity)", SEVERITY)
+pie_filters("conf-severity", "[Confluence Audit] Severity Distribution", SEVERITY)
+hbar("conf-category", "[Confluence Audit] Category Distribution", f"{D}conf_category", "Category", 20)
+hbar("conf-rules-bar", "[Confluence Audit] Top Rules Fired", "rule.description", "Rule", 15)
 
 # ---- Activity detail -------------------------------------------------------
-markdown("conf-md-activity", "CONF — md Activity",
+markdown("conf-md-activity", "[Confluence Audit] md Activity",
          "### 🧭 Activity Detail  \n_Who did what: most frequent audit summaries and actors, "
          "which rules fired, and which objects and sites were touched._")
-table("conf-top-actions", "CONF — Top Audit Summaries (summary · category)",
+table("conf-top-actions", "[Confluence Audit] Top Audit Summaries (summary · category)",
       [bucket(f"{D}conf_summary", 30, "Summary", "2"),
        bucket(f"{D}conf_category", 1, "Category", "3")], 15)
-table("conf-top-actors", "CONF — Top Actors (name · account id)",
+table("conf-top-actors", "[Confluence Audit] Top Actors (name · account id)",
       [bucket(f"{D}conf_author_name", 25, "Actor", "2"),
        bucket(f"{D}conf_author_account_id", 1, "Account ID", "3")], 15)
-hbar("conf-actor-bar", "CONF — Most Active Actors", f"{D}conf_author_name", "Actor", 15)
-table("conf-rules", "CONF — Rules Fired (ID · Description · Level)",
+hbar("conf-actor-bar", "[Confluence Audit] Most Active Actors", f"{D}conf_author_name", "Actor", 15)
+table("conf-rules", "[Confluence Audit] Rules Fired (ID · Description · Level)",
       [bucket("rule.id", 40, "Rule ID", "2"),
        bucket("rule.description", 1, "Description", "3"),
        bucket("rule.level", 1, "Level", "4")], 15)
-table("conf-objects", "CONF — Objects Acted On (type · name)",
+table("conf-objects", "[Confluence Audit] Objects Acted On (type · name)",
       [bucket(f"{D}conf_affected_type", 15, "Object type", "2"),
        bucket(f"{D}conf_affected_name", 3, "Top objects", "3")], 10)
-table("conf-sites", "CONF — Sites (data.conf_site_host)",
+table("conf-sites", "[Confluence Audit] Sites (data.conf_site_host)",
       [bucket(f"{D}conf_site_host", 10, "Site host", "2"),
        bucket(f"{D}conf_author_account_type", 1, "Top account type", "3")], 10)
 
 # ---- Security & detections -------------------------------------------------
-markdown("conf-md-sec", "CONF — md Security",
+markdown("conf-md-sec", "[Confluence Audit] md Security",
          "### 🚨 Security & Detections  \n_High-signal detections from Layer 1 (summary-specific) "
          "and the correlation rules. The KPI row counts each detection family; the table lists "
          "every event at **level ≥ 8**; the MITRE table maps alerts to ATT&CK techniques._")
@@ -288,50 +277,50 @@ metric("conf-sec-token", "API token created (127032)", count_metric(), color_to=
        filt=[phrase("rule.id", "127032", "api token")])
 metric("conf-sec-audit", "Audit log tampering (127050)", count_metric(), color_to=10,
        filt=[phrase("rule.id", "127050", "audit tampering")])
-timeline_filters("conf-sec-timeline", "CONF — Detections Over Time", DETECTIONS)
-pie_filters("conf-sec-pie", "CONF — Detection Mix", DETECTIONS)
-table("conf-sec-table", "CONF — High-Severity Events (L≥8): actor · summary · detection",
+timeline_filters("conf-sec-timeline", "[Confluence Audit] Detections Over Time", DETECTIONS)
+pie_filters("conf-sec-pie", "[Confluence Audit] Detection Mix", DETECTIONS)
+table("conf-sec-table", "[Confluence Audit] High-Severity Events (L≥8): actor · summary · detection",
       [bucket(f"{D}conf_author_name", 30, "Actor", "2"),
        bucket(f"{D}conf_summary", 1, "Summary", "3"),
        bucket("rule.description", 1, "Detection", "4"),
        bucket("rule.level", 1, "Level", "5")], 20, filt=[level_gte(8, "L>=8")])
-table("conf-mitre", "CONF — MITRE ATT&CK (technique · tactic)",
+table("conf-mitre", "[Confluence Audit] MITRE ATT&CK (technique · tactic)",
       [bucket("rule.mitre.id", 20, "Technique ID", "2"),
        bucket("rule.mitre.technique", 1, "Technique", "3"),
        bucket("rule.mitre.tactic", 1, "Tactic", "4")], 10)
 
 # ---- Authentication --------------------------------------------------------
-markdown("conf-md-auth", "CONF — md Auth",
+markdown("conf-md-auth", "[Confluence Audit] md Auth",
          "### 🔑 Authentication & Privileged Access  \n_Login successes vs failures, admin "
          "key/websudo/impersonation events, and the brute-force correlations (127011 "
          "per-account, 127012 per-source-IP). Source IP is only present when the audit "
          "record carries one._")
-timeline_filters("conf-auth-timeline", "CONF — Authentication Over Time", AUTH)
+timeline_filters("conf-auth-timeline", "[Confluence Audit] Authentication Over Time", AUTH)
 metric("conf-auth-bf-acct", "Brute force: account (127011)", count_metric(), color_to=5,
        filt=[phrase("rule.id", "127011", "bf account")])
 metric("conf-auth-bf-ip", "Brute force: source IP (127012)", count_metric(), color_to=5,
        filt=[phrase("rule.id", "127012", "bf source ip")])
-table("conf-auth-fail", "CONF — Failed Logins (actor · src IP)",
+table("conf-auth-fail", "[Confluence Audit] Failed Logins (actor · src IP)",
       [bucket(f"{D}conf_author_name", 20, "Actor", "2"),
        bucket(f"{D}conf_src_ip", 1, "Source IP", "3")], 10,
       filt=[phrase("rule.id", "127010", "failed auth")])
-table("conf-src-ip", "CONF — Source IPs (when present)",
+table("conf-src-ip", "[Confluence Audit] Source IPs (when present)",
       [bucket(f"{D}conf_src_ip", 20, "Source IP", "2"),
        bucket(f"{D}conf_author_name", 1, "Top actor", "3")], 10)
 
 # ---- Permissions & exposure ------------------------------------------------
-markdown("conf-md-perms", "CONF — md Permissions",
+markdown("conf-md-perms", "[Confluence Audit] md Permissions",
          "### 🛡️ Permissions & Public Exposure  \n_Space/page permission and restriction "
          "changes, global permissions, and anonymous/public/guest exposure toggles. "
          "Correlation 127026 fires on repeated changes by one actor (≥5 in 10 min)._")
-timeline_filters("conf-perm-timeline", "CONF — Permission & Exposure Changes Over Time", PERMS)
-table("conf-perm-actor", "CONF — Permission Changes by Actor (actor · summary)",
+timeline_filters("conf-perm-timeline", "[Confluence Audit] Permission & Exposure Changes Over Time", PERMS)
+table("conf-perm-actor", "[Confluence Audit] Permission Changes by Actor (actor · summary)",
       [bucket(f"{D}conf_author_name", 20, "Actor", "2"),
        bucket(f"{D}conf_summary", 2, "Top changes", "3")], 10,
       filt=[kql(PERM_IDS, "perm changes")])
 
 # ---- Content deletion ------------------------------------------------------
-markdown("conf-md-content", "CONF — md Content",
+markdown("conf-md-content", "[Confluence Audit] md Content",
          "### 🗑️ Content Deletion  \n_Page/blog/attachment deletions (127040) are routine "
          "alone; whole-space deletion (127041) is destructive; correlation 127042 fires on "
          "≥8 deletions by one actor in 5 minutes (mass-deletion / sabotage signal)._")
@@ -339,14 +328,14 @@ metric("conf-del-space", "Space deleted/archived (127041)", count_metric(), colo
        filt=[phrase("rule.id", "127041", "space deleted")])
 metric("conf-del-mass", "Mass deletion corr (127042)", count_metric(), color_to=5,
        filt=[phrase("rule.id", "127042", "mass deletion")])
-timeline_filters("conf-del-timeline", "CONF — Deletions Over Time", CONTENT)
-table("conf-del-actor", "CONF — Deletions by Actor (actor · summary)",
+timeline_filters("conf-del-timeline", "[Confluence Audit] Deletions Over Time", CONTENT)
+table("conf-del-actor", "[Confluence Audit] Deletions by Actor (actor · summary)",
       [bucket(f"{D}conf_author_name", 20, "Actor", "2"),
        bucket(f"{D}conf_summary", 2, "Top deletions", "3")], 10,
       filt=[kql(DELETE_IDS, "deletions")])
 
 # ---- Export / backup -------------------------------------------------------
-markdown("conf-md-export", "CONF — md Export",
+markdown("conf-md-export", "[Confluence Audit] md Export",
          "### 📤 Export, Backup & Data Collection  \n_Site exports and backups (127060), space "
          "exports (127061), content downloads (127063), and the bulk-export correlation 127064 "
          "that fires on ≥5 exports by one actor in 10 minutes._")
@@ -354,14 +343,14 @@ metric("conf-export-site", "Site export/backup (127060)", count_metric(), color_
        filt=[phrase("rule.id", "127060", "site export")])
 metric("conf-export-bulk", "Bulk export corr (127064)", count_metric(), color_to=5,
        filt=[phrase("rule.id", "127064", "bulk export")])
-timeline_filters("conf-export-timeline", "CONF — Export/Backup Over Time", EXPORTS)
-table("conf-export-actor", "CONF — Export Activity by Actor (actor · summary)",
+timeline_filters("conf-export-timeline", "[Confluence Audit] Export/Backup Over Time", EXPORTS)
+table("conf-export-actor", "[Confluence Audit] Export Activity by Actor (actor · summary)",
       [bucket(f"{D}conf_author_name", 20, "Actor", "2"),
        bucket(f"{D}conf_summary", 2, "Top exports", "3")], 10,
       filt=[kql(EXPORT_IDS, "exports")])
 
 # ---- Audit log integrity ---------------------------------------------------
-markdown("conf-md-audit", "CONF — md Audit Integrity",
+markdown("conf-md-audit", "[Confluence Audit] md Audit Integrity",
          "### 🧾 Audit Log Integrity  \n_Who touches the audit trail itself. Retention/config "
          "changes and purges (127050) can hide later activity — treat any hit as significant. "
          "Exports (127051) and views (127052) are normal admin behavior at low volume._")
@@ -371,46 +360,45 @@ metric("conf-audit-export", "Audit log exported (127051)", count_metric(), color
        filt=[phrase("rule.id", "127051", "audit export")])
 metric("conf-audit-view", "Audit log viewed (127052)", count_metric(), color_to=100,
        filt=[phrase("rule.id", "127052", "audit viewed")])
-timeline_filters("conf-audit-timeline", "CONF — Audit Log Activity Over Time", AUDIT)
-table("conf-audit-actor", "CONF — Audit Log Activity by Actor (actor · summary)",
+timeline_filters("conf-audit-timeline", "[Confluence Audit] Audit Log Activity Over Time", AUDIT)
+table("conf-audit-actor", "[Confluence Audit] Audit Log Activity by Actor (actor · summary)",
       [bucket(f"{D}conf_author_name", 15, "Actor", "2"),
        bucket(f"{D}conf_summary", 2, "Activity", "3")], 10,
       filt=[kql("rule.id:(127050 or 127051 or 127052)", "audit log activity")])
 
 # ---- Users, groups & external actors ---------------------------------------
-markdown("conf-md-users", "CONF — md Users",
+markdown("conf-md-users", "[Confluence Audit] md Users",
          "### 👥 Users, Groups & External Actors  \n_User lifecycle and group membership changes "
          "(admin-group additions escalate to 127021, level 12), plus everything done by guest "
          "users and external collaborators — an audience worth watching on its own._")
-timeline_filters("conf-users-timeline", "CONF — User & Group Changes Over Time", USERS)
-table("conf-users-table", "CONF — User/Group Changes (summary · actor)",
+timeline_filters("conf-users-timeline", "[Confluence Audit] User & Group Changes Over Time", USERS)
+table("conf-users-table", "[Confluence Audit] User/Group Changes (summary · actor)",
       [bucket(f"{D}conf_summary", 20, "Change", "2"),
        bucket(f"{D}conf_author_name", 1, "Actor", "3")], 10,
       filt=[kql("rule.id:(127021 or 127045 or 127046)", "user/group changes")])
-table("conf-external-table", "CONF — Guest/External Collaborator Activity (actor · summary)",
+table("conf-external-table", "[Confluence Audit] Guest/External Collaborator Activity (actor · summary)",
       [bucket(f"{D}conf_author_name", 20, "Actor", "2"),
        bucket(f"{D}conf_summary", 2, "Top activity", "3")], 10,
       filt=[kql(EXTERNAL_KQL, "guest/external")])
 
 # ---- Fallback canary -------------------------------------------------------
-markdown("conf-md-fallback", "CONF — md Fallback",
+markdown("conf-md-fallback", "[Confluence Audit] md Fallback",
          "### 🕵️ Category Fallback (Canary)  \n_Events no Layer 1 rule claimed, caught by the "
          "category tiers 127090 (security/identity) and 127091 (admin/content). A sustained "
          "spike of one summary here means Confluence introduced an event the ruleset should "
          "classify — review and add a Layer 1 rule._")
-timeline_filters("conf-fallback-timeline", "CONF — Fallback Hits Over Time", FALLBACK)
-table("conf-fallback-table", "CONF — Unclassified Summaries (summary · category)",
+timeline_filters("conf-fallback-timeline", "[Confluence Audit] Fallback Hits Over Time", FALLBACK)
+table("conf-fallback-table", "[Confluence Audit] Unclassified Summaries (summary · category)",
       [bucket(f"{D}conf_summary", 30, "Summary", "2"),
        bucket(f"{D}conf_category", 1, "Category", "3")], 15,
       filt=[kql("rule.id:(127090 or 127091)", "fallback")])
 
 # ---- Coverage reference ----------------------------------------------------
-markdown("conf-coverage", "CONF — Coverage Reference",
+markdown("conf-coverage", "[Confluence Audit] Rule Reference (1/2)",
          "### 🗺️ Rule & Coverage Reference\n"
          "Layered ruleset — base rule 127000 guarantees **no event is missed**; the most "
-         "specific rule in each family wins (file order); category tiers backstop the long "
-         "tail. Levels are aligned with the Jira 126xxx ruleset so the same event class "
-         "scores the same in both products.\n\n"
+         "specific rule in each family wins (file order). Levels are aligned with the Jira "
+         "126xxx ruleset so the same event class scores the same in both products.\n\n"
          "| Rule | Level | Meaning |\n|---|---|---|\n"
          "| **127000** | 3 | Base — every Confluence audit record (no-miss catch-all) |\n"
          "| **127010** | 5 | Single failed login |\n"
@@ -424,7 +412,12 @@ markdown("conf-coverage", "CONF — Coverage Reference",
          "| **127022 / 127023** | **11** / 5 | Public/anonymous exposure enabled / removed |\n"
          "| **127024** | 10 | Global permission changed |\n"
          "| **127025** | 7 | Space/page permission or restriction changed |\n"
-         "| **127026** | 10 | Repeated permission/exposure changes (corr) |\n"
+         "| **127026** | 10 | Repeated permission/exposure changes (corr) |")
+markdown("conf-coverage-2", "[Confluence Audit] Rule Reference (2/2)",
+         "### &nbsp;\n"
+         "Category tiers backstop the long tail; correlation rules escalate repeated "
+         "behavior by the same actor.\n\n"
+         "| Rule | Level | Meaning |\n|---|---|---|\n"
          "| **127030 / 127031** | 10 / 6 | App installed or authorized / removed |\n"
          "| **127032 / 127033** | 10 / 5 | API token created / revoked |\n"
          "| **127040** | 5 | Page/blog/attachment/template deleted |\n"
@@ -435,7 +428,8 @@ markdown("conf-coverage", "CONF — Coverage Reference",
          "| **127060 / 127061** | **12** / 9 | Site export or backup / space export |\n"
          "| **127062 / 127063** | 8 / 6 | Restore or import / content export/download |\n"
          "| **127064** | **12** | Bulk export by one actor (corr, ≥5 in 10 min) |\n"
-         "| **127090 / 127091** | 6 / 5 | Category fallback tiers (security / admin) |\n\n"
+         "| **127090 / 127091** | 6 / 5 | Category fallback tiers (security / admin) |")
+markdown("conf-coverage-notes", "[Confluence Audit] Coverage Notes",
          "**Notes:**\n"
          "- Correlation `frequency=\"N\"` fires on the (N+2)th event; `ignore` suppresses "
          "per-rule, not per-actor (anti-storm trade-off).\n"
@@ -448,9 +442,7 @@ markdown("conf-coverage", "CONF — Coverage Reference",
 # DASHBOARD LAYOUT  (48-col grid; rows expand to absolute y coordinates)
 # ============================================================================
 rows = [
-    (5,  [("conf-header", 0, 48)]),
     # Overview
-    (2,  [("conf-md-overview", 0, 48)]),
     (8,  [("conf-total", 0, 8), ("conf-actors", 8, 8), ("conf-categories", 16, 8),
           ("conf-high", 24, 8), ("conf-corr", 32, 8), ("conf-external", 40, 8)]),
     (13, [("conf-timeline", 0, 32), ("conf-severity", 32, 16)]),
@@ -493,7 +485,8 @@ rows = [
     (3,  [("conf-md-fallback", 0, 48)]),
     (12, [("conf-fallback-timeline", 0, 24), ("conf-fallback-table", 24, 24)]),
     # Coverage
-    (24, [("conf-coverage", 0, 48)]),
+    (30, [("conf-coverage", 0, 24), ("conf-coverage-2", 24, 24)]),
+    (9,  [("conf-coverage-notes", 0, 48)]),
 ]
 
 layout, y = [], 0
