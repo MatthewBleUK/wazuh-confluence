@@ -28,11 +28,26 @@ The script writes one JSON object per line. It flattens nested Confluence audit
 fields into collision-safe scalar fields such as `conf_summary`, `conf_category`,
 `conf_author_account_id`, `conf_affected_name`, and `conf_changed_fields`.
 
+The default configuration polls Confluence Cloud through the Atlassian API
+gateway, using your site's cloud id (shown at
+`https://<your-site>.atlassian.net/_edge/tenant_info`):
+
+```bash
+CONFLUENCE_AUDIT_PATH=https://api.atlassian.com/ex/confluence/<cloud-id>/wiki/rest/api/audit
+```
+
+When `CONFLUENCE_AUDIT_PATH` is a full URL it is used as the complete request
+URL; `CONFLUENCE_BASE_URL` then only labels the `conf_site_host` event field,
+so keep it set to your real site URL. A relative path is appended to
+`CONFLUENCE_BASE_URL` instead: use `/wiki/rest/api/audit` to poll the site
+directly.
+
 ## Requirements
 
 - Wazuh 4.x manager.
 - A Confluence account with Confluence administrator access.
-- Network access from the Wazuh manager to the Confluence base URL.
+- Network access from the Wazuh manager to `api.atlassian.com` (or to the
+  Confluence base URL when polling the site directly).
 - One supported auth method:
   - Confluence Cloud: email address plus Atlassian API token using Basic auth.
   - Data Center or proxy auth: personal access token using Bearer auth, if
@@ -41,12 +56,12 @@ fields into collision-safe scalar fields such as `conf_summary`, `conf_category`
 Quick API test:
 
 ```bash
-curl -s -u '<email-or-user>:<api-token>' \
+curl -s -u '<email>:<api-token>' \
   -H 'Accept: application/json' \
-  'https://<site>.atlassian.net/wiki/rest/api/audit?limit=1'
+  'https://api.atlassian.com/ex/confluence/<cloud-id>/wiki/rest/api/audit?limit=1'
 ```
 
-Bearer/PAT test:
+Bearer/PAT test (direct site URL):
 
 ```bash
 curl -s -H 'Authorization: Bearer <pat-or-token>' \
